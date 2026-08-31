@@ -1,6 +1,6 @@
 # Synology Docker restic Rclone Backup
 
-Back up Docker Compose projects on a Synology NAS with [restic](https://restic.net/) and [rclone](https://rclone.org/), controlled entirely through the Synology Container Manager API — no SSH `docker compose` calls, no dependency on cron's environment. Includes an interactive restore script, a self-update script for the binaries, and a small CLI helper for ad-hoc restic commands.
+Back up Docker Compose projects on a Synology NAS with [restic](https://restic.net/) and [Rclone](https://rclone.org/), controlled entirely through the Synology Container Manager API — no SSH `docker compose` calls, no dependency on cron's environment. Includes an interactive restore script, a self-update script for the binaries, and a small CLI helper for ad-hoc restic commands.
 
 ## Why
 
@@ -35,7 +35,7 @@ All four are meant to live together in one directory on the NAS, e.g. `/volume1/
 - DSM 7 with Container Manager (Docker) installed
 - SSH access with an administrator account, root via `sudo -i`
 - `jq` (used to resolve a project name to its Container Manager UUID) — check with `command -v jq`; if missing, install it via Entware or a static build
-- An rclone-supported remote (OneDrive, Backblaze B2, S3, ...) with credentials already set up
+- An Rclone-supported remote (OneDrive, Backblaze B2, S3, ...) with credentials already set up
 - Each Docker service organized as: one Compose directory under `COMPOSE_BASE/<project>` and, optionally, one data/bind-mount directory under `DOCKER_BASE/<project>`
 
 ## Installation
@@ -56,7 +56,7 @@ mv restic_X.Y.Z_linux_amd64 restic
 chmod +x restic
 ```
 
-**rclone** — from the [rclone downloads page](https://rclone.org/downloads/):
+**Rclone** — from the [Rclone downloads page](https://rclone.org/downloads/):
 ```bash
 curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip
 7z x rclone-current-linux-amd64.zip
