@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # restic Backup Update Script
-# Version 1.0.0 - 2026-08-31
+# Version 1.0.1 - 2026-09-06
 #
 # Updates restic, rclone and the static curl binary.
 # The previous binaries are backed up as <name>.old first. If an updated
@@ -240,7 +240,10 @@ if [ -n "$CURL_ARCH" ]; then
 	else
 		log "Latest version: $CURL_TAG"
 
-		TMPDIR_CURL="$(mktemp -d /tmp/curlupd.XXXXXX)"
+		# IMPORTANT: NOT under /tmp - DSM7 mounts /tmp as tmpfs with noexec,
+		# which would make any freshly downloaded binary unexecutable even
+		# with the executable bit set. RESTIC_DIR is proven to allow exec.
+		TMPDIR_CURL="$(mktemp -d "$RESTIC_DIR/.curlupd.XXXXXX")"
 		ARCHIVE="curl-linux-${CURL_ARCH}-musl-${CURL_TAG}.tar.xz"
 		URL="https://github.com/$CURL_REPO/releases/download/$CURL_TAG/$ARCHIVE"
 
@@ -251,22 +254,32 @@ if [ -n "$CURL_ARCH" ]; then
 			if [ -z "$NEW_CURL" ]; then
 				log "ERROR: no curl file found in the archive."
 				OVERALL_STATUS="Failed"
-			elif ! "$NEW_CURL" --version 2>/dev/null | grep -qi 'smtp'; then
-				log "ERROR: the new binary does not support SMTP - not adopting it."
-				OVERALL_STATUS="Failed"
 			else
-				if [ -x "$CURL_SMTP_BIN" ]; then
-					cp -p "$CURL_SMTP_BIN" "${CURL_SMTP_BIN}.old"
-				fi
+				# tar doesn't always preserve the executable bit reliably,
+				# so set it explicitly before testing the binary
+				chmod +x "$NEW_CURL"
 
-				if cp "$NEW_CURL" "$CURL_SMTP_BIN" && chmod +x "$CURL_SMTP_BIN"; then
-					if verify_or_rollback "$CURL_SMTP_BIN" 'curl-smtp' --version; then
-						log "Updated: $CURL_OLD_VER -> $CURL_TAG"
-						CHANGES+=("curl-smtp $CURL_OLD_VER -> $CURL_TAG")
-					fi
-				else
-					log "ERROR: could not install the new binary."
+				if ! CURL_TEST_OUTPUT="$("$NEW_CURL" --version 2>&1)"; then
+					log "ERROR: the new binary cannot be executed:"
+					log "$CURL_TEST_OUTPUT"
 					OVERALL_STATUS="Failed"
+				elif ! echo "$CURL_TEST_OUTPUT" | grep -qi 'smtp'; then
+					log "ERROR: the new binary does not support SMTP - not adopting it."
+					OVERALL_STATUS="Failed"
+				else
+					if [ -x "$CURL_SMTP_BIN" ]; then
+						cp -p "$CURL_SMTP_BIN" "${CURL_SMTP_BIN}.old"
+					fi
+
+					if cp "$NEW_CURL" "$CURL_SMTP_BIN" && chmod +x "$CURL_SMTP_BIN"; then
+						if verify_or_rollback "$CURL_SMTP_BIN" 'curl-smtp' --version; then
+							log "Updated: $CURL_OLD_VER -> $CURL_TAG"
+							CHANGES+=("curl-smtp $CURL_OLD_VER -> $CURL_TAG")
+						fi
+					else
+						log "ERROR: could not install the new binary."
+						OVERALL_STATUS="Failed"
+					fi
 				fi
 			fi
 		else
@@ -306,8 +319,7 @@ if [ "${#CHANGES[@]}" -eq 0 ]; then
 	log "No updates were made."
 else
 	log "Updates: ${CHANGES[*]}"
-	log "The old binaries are kept alongside as *.old and can be removed"
-	log "after a successful backup run."
+	log "The old binaries are kept alongside as *.old and can be removed after a successful backup run."
 fi
 
 log "Overall status: $OVERALL_STATUS"
