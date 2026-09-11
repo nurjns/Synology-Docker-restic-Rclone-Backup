@@ -54,6 +54,7 @@ curl -LO https://github.com/restic/restic/releases/download/vX.Y.Z/restic_X.Y.Z_
 bunzip2 restic_X.Y.Z_linux_amd64.bz2
 mv restic_X.Y.Z_linux_amd64 restic
 chmod +x restic
+rm restic_X.Y.Z_linux_amd64.bz2
 ```
 
 **Rclone** — from the [Rclone downloads page](https://rclone.org/downloads/):
@@ -62,6 +63,7 @@ curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip
 7z x rclone-current-linux-amd64.zip
 cp rclone-*-linux-amd64/rclone .
 chmod +x rclone
+rm rclone-current-linux-amd64.zip
 ```
 
 **curl with SMTP support** — DSM's bundled `curl` is built without SMTP. Grab a static build from [stunnel/static-curl](https://github.com/stunnel/static-curl/releases) (use the **musl** variant):
@@ -72,6 +74,7 @@ tar -xf "curl-linux-x86_64-musl-$TAG.tar.xz"
 mv curl curl-smtp
 chmod +x curl-smtp
 ./curl-smtp --version | grep -i smtp   # must list "smtp smtps"
+rm curl-linux-x86_64-musl-$TAG.tar.xz
 ```
 
 ## Secrets
