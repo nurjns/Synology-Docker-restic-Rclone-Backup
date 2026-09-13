@@ -244,6 +244,7 @@ for project in "${PROJECTS[@]}"; do
 			PROJECT_IDS["$project"]="$pid"
 			log "Stopping project $project (ID $pid) ..."
 			project_api_stop "$pid" >> "$LOGFILE" 2>&1
+			sleep 1
 
 			# fallback in case the API reports ok but something is still running
 			if [ -n "$(project_running_ids "$project")" ]; then
